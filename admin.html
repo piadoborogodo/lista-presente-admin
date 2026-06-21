@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel — Lista de Presentes Kassia & Matheus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<style>
+  :root{
+    --bg:#FAF6EF;
+    --surface:#FFFFFF;
+    --border:#E8DFD0;
+    --text:#2B2420;
+    --muted:#8C8073;
+    --sage:#7C9070;
+    --sage-bg:#EEF1E9;
+    --terra:#C2734F;
+    --terra-bg:#FBEAE1;
+    --danger:#B5483A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'DM Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:1100px; margin:0 auto; padding:32px 20px 80px; }
+
+  /* header */
+  header{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    flex-wrap:wrap; gap:14px;
+    border-bottom:1px solid var(--border);
+    padding-bottom:20px; margin-bottom:24px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.14em;
+    color:var(--muted); text-transform:uppercase; margin-bottom:6px;
+  }
+  h1{
+    font-family:'DM Serif Display', serif; font-weight:400; font-style:italic;
+    font-size:32px; margin:0; line-height:1.1;
+  }
+  .status-line{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--muted);
+    display:flex; align-items:center; gap:8px;
+  }
+  .dot{ width:7px; height:7px; border-radius:50%; display:inline-block; flex:none; }
+  .dot.ok{ background:var(--sage); box-shadow:0 0 0 3px var(--sage-bg); }
+  .dot.err{ background:var(--danger); box-shadow:0 0 0 3px var(--terra-bg); }
+  .refresh-btn{
+    border:1px solid var(--border); background:var(--surface); color:var(--text);
+    font-family:'IBM Plex Mono', monospace; font-size:11px; padding:6px 10px;
+    border-radius:6px; cursor:pointer;
+  }
+  .refresh-btn:hover{ border-color:var(--text); }
+  .refresh-btn:focus-visible, button:focus-visible, input:focus-visible{
+    outline:2px solid var(--terra); outline-offset:2px;
+  }
+
+  /* stats */
+  .stats{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:1px;
+    background:var(--border); border:1px solid var(--border); border-radius:10px;
+    overflow:hidden; margin-bottom:24px;
+  }
+  .stat{ background:var(--surface); padding:16px 18px; }
+  .stat .num{ font-family:'IBM Plex Mono', monospace; font-size:24px; font-weight:500; }
+  .stat .lbl{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-top:4px; }
+  .stat.sage .num{ color:var(--sage); }
+  .stat.terra .num{ color:var(--terra); }
+
+  /* controls */
+  .controls{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    margin-bottom:18px;
+  }
+  .search{
+    flex:1; min-width:180px;
+    border:1px solid var(--border); background:var(--surface);
+    border-radius:8px; padding:9px 12px; font-family:'DM Sans'; font-size:14px;
+    color:var(--text);
+  }
+  .pill-group{ display:flex; gap:6px; flex-wrap:wrap; }
+  .pill{
+    border:1px solid var(--border); background:var(--surface); color:var(--muted);
+    font-size:12px; padding:7px 12px; border-radius:999px; cursor:pointer;
+    font-family:'DM Sans'; white-space:nowrap;
+  }
+  .pill.active{ background:var(--text); border-color:var(--text); color:var(--bg); }
+
+  /* error banner */
+  .banner{
+    display:none; background:var(--terra-bg); border:1px solid var(--terra);
+    color:#7a3a26; padding:12px 14px; border-radius:8px; font-size:13px;
+    margin-bottom:18px; line-height:1.5;
+  }
+  .banner.show{ display:block; }
+
+  /* table */
+  .table-wrap{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    overflow:hidden;
+  }
+  table{ width:100%; border-collapse:collapse; }
+  thead th{
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--muted); padding:12px 14px; border-bottom:1px solid var(--border);
+    font-weight:500;
+  }
+  tbody tr{ border-bottom:1px solid var(--border); }
+  tbody tr:last-child{ border-bottom:none; }
+  tbody tr:hover{ background:#FCFAF6; }
+  td{ padding:13px 14px; font-size:14px; vertical-align:middle; }
+  .gname{ font-weight:500; }
+  .gcat{ font-size:12px; color:var(--muted); margin-top:2px; }
+  .gprice{ font-family:'IBM Plex Mono', monospace; font-size:13px; }
+  .guest{ font-size:14px; }
+  .guest.empty{ color:var(--muted); font-style:italic; }
+  .gdate{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--muted); }
+  .badge{
+    display:inline-flex; align-items:center; gap:6px; font-size:12px;
+    padding:4px 9px; border-radius:999px; font-weight:500;
+  }
+  .badge.sage{ background:var(--sage-bg); color:var(--sage); }
+  .badge.terra{ background:var(--terra-bg); color:var(--terra); }
+  .empty-row td{ text-align:center; color:var(--muted); padding:40px 14px; }
+
+  /* toast */
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translate(-50%,20px);
+    background:var(--text); color:var(--bg); padding:11px 18px; border-radius:8px;
+    font-size:13px; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
+    z-index:60;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%,0); }
+
+  /* responsive: table -> cards */
+  @media (max-width:720px){
+    thead{ display:none; }
+    table, tbody, tr, td{ display:block; width:100%; }
+    tbody tr{ padding:12px 14px; }
+    td{ padding:6px 0; border:none; display:flex; justify-content:space-between; gap:12px; align-items:center; }
+    td::before{ content:attr(data-label); font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+    .stats{ grid-template-columns:repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="eyebrow">Painel administrativo</div>
+      <h1>Kassia &amp; Matheus</h1>
+    </div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="status-line"><span class="dot ok" id="statusDot"></span><span id="statusText">conectando…</span></span>
+      <button class="refresh-btn" id="refreshBtn">↻ atualizar</button>
+    </div>
+  </header>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="stats">
+    <div class="stat"><div class="num" id="statTotal">—</div><div class="lbl">Presentes</div></div>
+    <div class="stat sage"><div class="num" id="statAvail">—</div><div class="lbl">Disponíveis</div></div>
+    <div class="stat terra"><div class="num" id="statRes">—</div><div class="lbl">Reservados</div></div>
+    <div class="stat"><div class="num" id="statValue">—</div><div class="lbl">Valor reservado</div></div>
+  </div>
+
+  <div class="controls">
+    <input class="search" id="search" placeholder="Buscar presente…" />
+    <div class="pill-group" id="statusFilter"></div>
+  </div>
+  <div class="controls" style="margin-top:-6px;">
+    <div class="pill-group" id="catFilter"></div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Presente</th>
+          <th>Preço</th>
+          <th>Status</th>
+          <th>Reservado por</th>
+          <th>Reservado em</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+// ============================================
+// CONFIG — mesmo projeto e SDK do site público
+// ============================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD5-QQyI6NC4svwQ_rgPEfCk36GygR2pyU",
+  authDomain: "casamento-lista-presente.firebaseapp.com",
+  projectId: "casamento-lista-presente",
+  storageBucket: "casamento-lista-presente.firebasestorage.app",
+  messagingSenderId: "572003554062",
+  appId: "1:572003554062:web:00dda9c5871d65b073fd5f",
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const reservasRef = collection(db, "reservas");
+
+// catálogo (espelha o script.js do site público)
+const gifts = [
+  { id:1, name:'Jogo de Panelas', cat:'Cozinha', price:'R$ 320', qty:1 },
+  { id:2, name:'Cafeteira Italiana', cat:'Cozinha', price:'R$ 180', qty:1 },
+  { id:3, name:'Air Fryer', cat:'Cozinha', price:'R$ 580', qty:1 },
+  { id:4, name:'Jogo de Talheres', cat:'Mesa posta', price:'R$ 280', qty:1 },
+  { id:5, name:'Travessa de Porcelana', cat:'Mesa posta', price:'R$ 140', qty:2 },
+  { id:6, name:'Jogo de Cama Queen', cat:'Quarto', price:'R$ 460', qty:1 },
+  { id:7, name:'Jogo de Toalhas', cat:'Banheiro', price:'R$ 220', qty:1 },
+  { id:8, name:'Aspirador Robô', cat:'Utilidades', price:'R$ 1.200', qty:1 },
+  { id:9, name:'Quadro Decorativo', cat:'Decoração', price:'R$ 350', qty:2 },
+  { id:10, name:'Luminária de Mesa', cat:'Decoração', price:'R$ 260', qty:2 },
+  { id:11, name:'Porta Retratos', cat:'Decoração', price:'R$ 90', qty:3 },
+  { id:12, name:'Espelho de Parede', cat:'Decoração', price:'R$ 420', qty:1 },
+  { id:13, name:'Liquidificador', cat:'Cozinha', price:'R$ 250', qty:1 },
+  { id:14, name:'Panela de Pressão Elétrica', cat:'Cozinha', price:'R$ 430', qty:1 },
+  { id:15, name:'Edredom Casal', cat:'Quarto', price:'R$ 310', qty:1 },
+  { id:16, name:'Jogo de Lençóis Extra', cat:'Quarto', price:'R$ 240', qty:2 },
+  { id:17, name:'Tapete para Sala', cat:'Sala', price:'R$ 380', qty:1 },
+  { id:18, name:'Conjunto de Almofadas', cat:'Sala', price:'R$ 130', qty:2 },
+];
+
+let reservas = {};        // { [id]: { convidado, reservadoEm } }
+let statusFilter = 'all'; // all | avail | res
+let catFilter = 'all';
+let searchTerm = '';
+
+const cats = ['all', ...new Set(gifts.map(g => g.cat))];
+
+function parsePrice(str){
+  return parseFloat(String(str).replace('R$','').trim().replace(/\./g,'').replace(',', '.')) || 0;
+}
+function fmtMoney(n){
+  return n.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+}
+function fmtDate(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+
+// ============================================
+// FIRESTORE — leitura em tempo real (onSnapshot)
+// ============================================
+function startListening(){
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  onSnapshot(reservasRef, (snap) => {
+    const map = {};
+    snap.forEach(d => {
+      const data = d.data();
+      map[d.id] = {
+        convidado: data.convidado || '',
+        reservadoEm: data.reservadoEm ? data.reservadoEm.toDate().toISOString() : null,
+      };
+    });
+    reservas = map;
+    hideBanner();
+    dot.className = 'dot ok';
+    text.textContent = `ao vivo · ${new Date().toLocaleTimeString('pt-BR')}`;
+    render();
+  }, (err) => {
+    dot.className = 'dot err';
+    text.textContent = 'falha na conexão';
+    showBanner(err.message);
+  });
+}
+
+// ============================================
+// UI
+// ============================================
+function buildFilters(){
+  const sf = document.getElementById('statusFilter');
+  sf.innerHTML = '';
+  [['all','Todos'], ['avail','Disponíveis'], ['res','Reservados']].forEach(([key,label]) => {
+    const b = document.createElement('button');
+    b.className = 'pill' + (statusFilter === key ? ' active' : '');
+    b.textContent = label;
+    b.onclick = () => { statusFilter = key; buildFilters(); render(); };
+    sf.appendChild(b);
+  });
+
+  const cf = document.getElementById('catFilter');
+  cf.innerHTML = '';
+  cats.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'pill' + (catFilter === c ? ' active' : '');
+    b.textContent = c === 'all' ? 'Todas categorias' : c;
+    b.onclick = () => { catFilter = c; buildFilters(); render(); };
+    cf.appendChild(b);
+  });
+}
+
+function render(){
+  const tbody = document.getElementById('tbody');
+  let list = gifts.filter(g => {
+    const isRes = !!reservas[g.id];
+    if(statusFilter === 'avail' && isRes) return false;
+    if(statusFilter === 'res' && !isRes) return false;
+    if(catFilter !== 'all' && g.cat !== catFilter) return false;
+    if(searchTerm && !g.name.toLowerCase().includes(searchTerm)) return false;
+    return true;
+  });
+
+  tbody.innerHTML = '';
+  if(!list.length){
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Nenhum presente encontrado com esses filtros.</td></tr>';
+  } else {
+    list.forEach(g => {
+      const r = reservas[g.id];
+      const isRes = !!r;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td data-label="Presente">
+          <div class="gname">${g.name}</div>
+          <div class="gcat">${g.cat}${g.qty > 1 ? ` · ${g.qty} unid.` : ''}</div>
+        </td>
+        <td data-label="Preço" class="gprice">${g.price}</td>
+        <td data-label="Status">
+          <span class="badge ${isRes ? 'terra' : 'sage'}">${isRes ? 'Reservado' : 'Disponível'}</span>
+        </td>
+        <td data-label="Reservado por" class="guest ${isRes ? '' : 'empty'}">${isRes ? r.convidado : '—'}</td>
+        <td data-label="Reservado em" class="gdate">${isRes ? fmtDate(r.reservadoEm) : '—'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // stats (sempre sobre o total, ignorando filtros)
+  const resCount = Object.keys(reservas).length;
+  const resValue = gifts.filter(g => reservas[g.id]).reduce((sum,g) => sum + parsePrice(g.price), 0);
+  document.getElementById('statTotal').textContent = gifts.length;
+  document.getElementById('statAvail').textContent = gifts.length - resCount;
+  document.getElementById('statRes').textContent = resCount;
+  document.getElementById('statValue').textContent = fmtMoney(resValue);
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function showBanner(detail){
+  const b = document.getElementById('banner');
+  b.innerHTML = `Não consegui falar com o Firestore (${detail || 'erro desconhecido'}). O mais provável é que as <strong>Security Rules</strong> do projeto não liberem essa operação (leitura, criação, edição ou exclusão). Veja em Firebase Console → Firestore Database → Regras.`;
+  b.classList.add('show');
+}
+function hideBanner(){
+  document.getElementById('banner').classList.remove('show');
+}
+
+// eventos
+document.getElementById('refreshBtn').onclick = () => location.reload();
+document.getElementById('search').oninput = e => { searchTerm = e.target.value.toLowerCase(); render(); };
+
+// boot
+buildFilters();
+render();
+startListening();
+</script>
+</body>
+</html>
