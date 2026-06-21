@@ -64,7 +64,7 @@
 
   /* stats */
   .stats{
-    display:grid; grid-template-columns:repeat(4,1fr); gap:1px;
+    display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
     background:var(--border); border:1px solid var(--border); border-radius:10px;
     overflow:hidden; margin-bottom:24px;
   }
@@ -118,7 +118,6 @@
   td{ padding:13px 14px; font-size:14px; vertical-align:middle; }
   .gname{ font-weight:500; }
   .gcat{ font-size:12px; color:var(--muted); margin-top:2px; }
-  .gprice{ font-family:'IBM Plex Mono', monospace; font-size:13px; }
   .guest{ font-size:14px; }
   .guest.empty{ color:var(--muted); font-style:italic; }
   .gdate{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--muted); }
@@ -170,7 +169,6 @@
     <div class="stat"><div class="num" id="statTotal">—</div><div class="lbl">Presentes</div></div>
     <div class="stat sage"><div class="num" id="statAvail">—</div><div class="lbl">Disponíveis</div></div>
     <div class="stat terra"><div class="num" id="statRes">—</div><div class="lbl">Reservados</div></div>
-    <div class="stat"><div class="num" id="statValue">—</div><div class="lbl">Valor reservado</div></div>
   </div>
 
   <div class="controls">
@@ -186,7 +184,6 @@
       <thead>
         <tr>
           <th>Presente</th>
-          <th>Preço</th>
           <th>Status</th>
           <th>Reservado por</th>
           <th>Reservado em</th>
@@ -221,24 +218,24 @@ const reservasRef = collection(db, "reservas");
 
 // catálogo (espelha o script.js do site público)
 const gifts = [
-  { id:1, name:'Jogo de Panelas', cat:'Cozinha', price:'R$ 320', qty:1 },
-  { id:2, name:'Cafeteira Italiana', cat:'Cozinha', price:'R$ 180', qty:1 },
-  { id:3, name:'Air Fryer', cat:'Cozinha', price:'R$ 580', qty:1 },
-  { id:4, name:'Jogo de Talheres', cat:'Mesa posta', price:'R$ 280', qty:1 },
-  { id:5, name:'Travessa de Porcelana', cat:'Mesa posta', price:'R$ 140', qty:2 },
-  { id:6, name:'Jogo de Cama Queen', cat:'Quarto', price:'R$ 460', qty:1 },
-  { id:7, name:'Jogo de Toalhas', cat:'Banheiro', price:'R$ 220', qty:1 },
-  { id:8, name:'Aspirador Robô', cat:'Utilidades', price:'R$ 1.200', qty:1 },
-  { id:9, name:'Quadro Decorativo', cat:'Decoração', price:'R$ 350', qty:2 },
-  { id:10, name:'Luminária de Mesa', cat:'Decoração', price:'R$ 260', qty:2 },
-  { id:11, name:'Porta Retratos', cat:'Decoração', price:'R$ 90', qty:3 },
-  { id:12, name:'Espelho de Parede', cat:'Decoração', price:'R$ 420', qty:1 },
-  { id:13, name:'Liquidificador', cat:'Cozinha', price:'R$ 250', qty:1 },
-  { id:14, name:'Panela de Pressão Elétrica', cat:'Cozinha', price:'R$ 430', qty:1 },
-  { id:15, name:'Edredom Casal', cat:'Quarto', price:'R$ 310', qty:1 },
-  { id:16, name:'Jogo de Lençóis Extra', cat:'Quarto', price:'R$ 240', qty:2 },
-  { id:17, name:'Tapete para Sala', cat:'Sala', price:'R$ 380', qty:1 },
-  { id:18, name:'Conjunto de Almofadas', cat:'Sala', price:'R$ 130', qty:2 },
+  { id:1, name:'Jogo de Panelas', cat:'Cozinha', qty:1 },
+  { id:2, name:'Cafeteira Italiana', cat:'Cozinha', qty:1 },
+  { id:3, name:'Air Fryer', cat:'Cozinha', qty:1 },
+  { id:4, name:'Jogo de Talheres', cat:'Mesa posta', qty:1 },
+  { id:5, name:'Travessa de Porcelana', cat:'Mesa posta', qty:2 },
+  { id:6, name:'Jogo de Cama Queen', cat:'Quarto', qty:1 },
+  { id:7, name:'Jogo de Toalhas', cat:'Banheiro', qty:1 },
+  { id:8, name:'Aspirador Robô', cat:'Utilidades', qty:1 },
+  { id:9, name:'Quadro Decorativo', cat:'Decoração', qty:2 },
+  { id:10, name:'Luminária de Mesa', cat:'Decoração', qty:2 },
+  { id:11, name:'Porta Retratos', cat:'Decoração', qty:3 },
+  { id:12, name:'Espelho de Parede', cat:'Decoração', qty:1 },
+  { id:13, name:'Liquidificador', cat:'Cozinha', qty:1 },
+  { id:14, name:'Panela de Pressão Elétrica', cat:'Cozinha', qty:1 },
+  { id:15, name:'Edredom Casal', cat:'Quarto', qty:1 },
+  { id:16, name:'Jogo de Lençóis Extra', cat:'Quarto', qty:2 },
+  { id:17, name:'Tapete para Sala', cat:'Sala', qty:1 },
+  { id:18, name:'Conjunto de Almofadas', cat:'Sala', qty:2 },
 ];
 
 let reservas = {};        // { [id]: { convidado, reservadoEm } }
@@ -248,12 +245,6 @@ let searchTerm = '';
 
 const cats = ['all', ...new Set(gifts.map(g => g.cat))];
 
-function parsePrice(str){
-  return parseFloat(String(str).replace('R$','').trim().replace(/\./g,'').replace(',', '.')) || 0;
-}
-function fmtMoney(n){
-  return n.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
-}
 function fmtDate(iso){
   if(!iso) return '—';
   const d = new Date(iso);
@@ -325,7 +316,7 @@ function render(){
 
   tbody.innerHTML = '';
   if(!list.length){
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Nenhum presente encontrado com esses filtros.</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Nenhum presente encontrado com esses filtros.</td></tr>';
   } else {
     list.forEach(g => {
       const r = reservas[g.id];
@@ -336,7 +327,6 @@ function render(){
           <div class="gname">${g.name}</div>
           <div class="gcat">${g.cat}${g.qty > 1 ? ` · ${g.qty} unid.` : ''}</div>
         </td>
-        <td data-label="Preço" class="gprice">${g.price}</td>
         <td data-label="Status">
           <span class="badge ${isRes ? 'terra' : 'sage'}">${isRes ? 'Reservado' : 'Disponível'}</span>
         </td>
@@ -349,11 +339,9 @@ function render(){
 
   // stats (sempre sobre o total, ignorando filtros)
   const resCount = Object.keys(reservas).length;
-  const resValue = gifts.filter(g => reservas[g.id]).reduce((sum,g) => sum + parsePrice(g.price), 0);
   document.getElementById('statTotal').textContent = gifts.length;
   document.getElementById('statAvail').textContent = gifts.length - resCount;
   document.getElementById('statRes').textContent = resCount;
-  document.getElementById('statValue').textContent = fmtMoney(resValue);
 }
 
 function showToast(msg){
